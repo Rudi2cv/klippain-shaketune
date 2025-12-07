@@ -95,7 +95,7 @@ class BeltsComputation:
         similarity_factor = None
         mhi = None
         if self.kinematics in {'limited_corexy', 'corexy', 'limited_corexz', 'corexz'}:
-            correlation = np.corrcoef(signal1.psd, signal2.psd)[0][-1]
+            correlation = np.corrcoef(signal1.psd, signal2.psd)[0, 1]
             similarity_factor = correlation * 100
             similarity_factor = np.clip(similarity_factor, 0, 100)
             ConsoleOutput.print(f'Belts estimated similarity: {similarity_factor:.1f}%')
