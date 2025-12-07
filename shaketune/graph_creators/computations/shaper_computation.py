@@ -14,7 +14,7 @@ from ...helpers.accelerometer import Measurement
 from ...helpers.common_func import compute_mechanical_parameters, detect_peaks
 from ...helpers.console_output import ConsoleOutput
 from ...helpers.spectrogram import compute_spectrogram
-from .. import get_shaper_calibrate_module
+from .. import find_best_shaper_compat, get_shaper_calibrate_module, process_accelerometer_data_compat
 from ..base_models import GraphMetadata
 from ..computation_results import ShaperResult
 
@@ -190,7 +190,7 @@ class ShaperComputation:
     def _calibrate_shaper(self, datas: np.ndarray, max_smoothing: Optional[float], scv: float, max_freq: float):
         """Find the best shaper parameters using Klipper's official algorithm"""
         shaper_calibrate, shaper_defs = get_shaper_calibrate_module()
-        calib_data = shaper_calibrate.process_accelerometer_data(datas)
+        calib_data = process_accelerometer_data_compat(shaper_calibrate, datas)
         calib_data.normalize_to_frequencies()
 
         # We compute the damping ratio using the Klipper's default value if it fails
@@ -201,7 +201,8 @@ class ShaperComputation:
         # best shaper choice and the full list of shapers that are set to the current machine response
         compat = False
         try:
-            k_shaper_choice, k_shapers = shaper_calibrate.find_best_shaper(
+            k_shaper_choice, k_shapers = find_best_shaper_compat(
+                shaper_calibrate,
                 calib_data,
                 shapers=None,
                 damping_ratio=zeta,
@@ -227,14 +228,15 @@ class ShaperComputation:
                 )
             )
             compat = True
-            k_shaper_choice, k_shapers = shaper_calibrate.find_best_shaper(calib_data, max_smoothing, None)
+            k_shaper_choice, k_shapers = find_best_shaper_compat(shaper_calibrate, calib_data, max_smoothing, None)
 
         # Then in a second time, we run again the same computation but with a super low smoothing value to
         # get the maximum accelerations values for each algorithms.
         if compat:
-            _, k_shapers_max = shaper_calibrate.find_best_shaper(calib_data, MIN_SMOOTHING, None)
+            _, k_shapers_max = find_best_shaper_compat(shaper_calibrate, calib_data, MIN_SMOOTHING, None)
         else:
-            _, k_shapers_max = shaper_calibrate.find_best_shaper(
+            _, k_shapers_max = find_best_shaper_compat(
+                shaper_calibrate,
                 calib_data,
                 shapers=None,
                 damping_ratio=zeta,
