@@ -104,9 +104,8 @@ class ShaperComputation:
         perf_shaper_accel = 0
         max_smoothing_computed = 0
         for shaper in k_shapers:
-            # Resample vals to match calibration_data.freqs if needed (new Klipper API from dec 2025)
             if hasattr(shaper, 'freq_bins') and shaper.freq_bins is not None:
-                # New Klipper from dec 2025: shaper has its own freq_bins, resample to match filtered freqs
+                # New Klipper (Dec 2025+): shaper has its own freq_bins, resample to filtered freqs
                 vals_resampled = np.interp(calibration_data.freqs, shaper.freq_bins, shaper.vals)
             else:
                 # Older Klipper: vals matches calibration_data.freq_bins, just filter it

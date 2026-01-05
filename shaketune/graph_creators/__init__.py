@@ -20,9 +20,8 @@ def _has_name_param_in_process_accel_data(shaper_calibrate):
     if 'has_name_param' not in _klipper_api_cache:
         try:
             sig = inspect.signature(shaper_calibrate.process_accelerometer_data)
-            params = list(sig.parameters.keys())
-            # New API has 'name' as first param
-            _klipper_api_cache['has_name_param'] = len(params) >= 2 and params[0] == 'name'
+            # Check by parameter name for robustness against signature reordering
+            _klipper_api_cache['has_name_param'] = 'name' in sig.parameters
         except (ValueError, TypeError):
             _klipper_api_cache['has_name_param'] = False
     return _klipper_api_cache['has_name_param']
@@ -36,8 +35,12 @@ def _normalize_find_best_shaper_result(result):
     elif isinstance(result, tuple) and len(result) == 2:
         # Intermediate API (Klipper commit c339bb0): (shaper, results)
         return result
+    elif hasattr(result, 'name'):
+        # Old API: just shaper object (has name attribute like 'mzv', 'zv', etc.)
+        return result, []
     else:
-        # Old API: just shaper
+        # Unexpected format - return as-is and let downstream code handle it
+        # This helps with debugging if Klipper API changes unexpectedly
         return result, []
 
 
